@@ -1,7 +1,3 @@
-// 
-// Decompiled by Procyon v0.5.36
-// 
-
 package me.reflexlabs.randomspawn.classes;
 
 import org.bukkit.Location;
