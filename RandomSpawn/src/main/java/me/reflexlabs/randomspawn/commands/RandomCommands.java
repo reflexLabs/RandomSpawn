@@ -71,13 +71,106 @@ public class RandomCommands implements CommandExecutor
                     	sender.sendMessage(Functions.formatMessage("&7&lUsage: &f/RandomSpawn " + args[0] + " [id]"));
                     }
             	}
-            } else if(args[0].equalsIgnoreCase("teleport") || args[0].equalsIgnoreCase("goto") || args[0].equalsIgnoreCase("tele")) {
+            } else if(args[0].equalsIgnoreCase("teleport")) {
+            	if(sender.hasPermission("randomspawn.teleport") || sender.hasPermission("randomspawn.*") || sender.isOp()) {
+            		try {
+            			String pointID;
+            			String target;
+
+            			try {
+            				pointID = args[1];
+            			} catch(Exception noPoint) {
+            				sender.sendMessage(Functions.formatMessage("&7&lUsage: &f/RandomSpawn " + args[0] + " [pointID] &7[Target]"));
+            				//noPoint.printStackTrace();
+            				return true;
+        				}
+
+            			try {
+            				target = args[2];
+            			} catch(Exception noPlayerSpecified) {
+            				if(sender instanceof Player) {
+        						RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport((Player) sender,RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));
+        						return true;
+    						} else {
+    							sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().notAvailable));
+    						}
+            				//noPlayerSpecified.printStackTrace();
+            				return true;
+        				}
+            			
+            			if(target == null) {
+            				// Self use
+            				if(sender instanceof Player) {
+        						RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport((Player) sender,RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));
+        						return true;
+    						} else {
+    							sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().notAvailable));
+    						}
+            				return true;
+            			} else {
+            				if(target.equalsIgnoreCase("@a") || target.equalsIgnoreCase("@e") || target.equalsIgnoreCase("@all")  || target.equalsIgnoreCase("@everyone")) {
+            					for(Player p : Bukkit.getServer().getOnlinePlayers()) {
+            						Point randomPoint = RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID);
+        							RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(p, randomPoint);
+        						}
+            				} else if(target.equalsIgnoreCase("@me") || target.equalsIgnoreCase("@m")) {
+            					// Self use
+            					if(sender instanceof Player) {
+            						RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport((Player) sender,RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));
+            						return true;
+        						} else {
+        							sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().notAvailable));
+        						}
+                			} else {
+                				try {
+                					if(Bukkit.getServer().getPlayer(target).isOnline()){
+                						if(!Bukkit.getServer().getPlayer(target).isDead()) {
+                							RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(Bukkit.getServer().getPlayer(target),RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));
+                    						return true;
+                						} else {
+                							sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().notAvailable));
+                						}
+                					} else {
+                						sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().isOffline));
+                					}
+                				} catch(Exception offlinePlayer) {
+            						sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().isOffline));
+                				}
+                			}
+            			}
+            		} catch(Exception noPlayerSpecified) {
+            			noPlayerSpecified.printStackTrace();
+    					// No player specified.
+    				}
+            	}
+        	}/* else if(args[0].equalsIgnoreCase("teleport") || args[0].equalsIgnoreCase("goto") || args[0].equalsIgnoreCase("tele")) {
             	if(sender.hasPermission("randomspawn.teleport") || sender.hasPermission("randomspawn.*") || sender.isOp()) {
             		try {
                 		String pointID = args[1];
                 		if(RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().isPointExists(pointID)) {
                 			if(sender instanceof Player) {
-                            	RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(((Player) sender),RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));	
+                				try {
+                					String playerName = args[2];
+                					if(playerName.equalsIgnoreCase("@a") || playerName.equalsIgnoreCase("@e") || playerName.equalsIgnoreCase("@all")  || playerName.equalsIgnoreCase("@everyone")) {
+                						for(Player p : Bukkit.getServer().getOnlinePlayers()) {
+                							RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(p,RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));
+                						}
+                					} else {
+                						if(Bukkit.getServer().getPlayer(playerName).isOnline()){
+                    						if(!Bukkit.getServer().getPlayer(playerName).isDead()) {
+                    							RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(Bukkit.getServer().getPlayer(playerName),RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));
+                        						return true;
+                    						} else {
+                    							sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().notAvailable));
+                    						}
+                    					} else {
+                    						sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().isOffline));
+                    					}
+                					}
+                				} catch(Exception noPlayerSpecified) {
+                					// No player specified.
+                				}
+                				RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(((Player) sender),RandomSpawn.getInstance().getRandomManager().getDataManager().getPointById(pointID));	
                         	} else {
                         		sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().notAvailable));
                         	}
@@ -85,11 +178,35 @@ public class RandomCommands implements CommandExecutor
                     		sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().pointIsntExists));
                 		}
                 	} catch(Exception wrong) {
-                		sender.sendMessage(Functions.formatMessage("&7&lUsage: &f/RandomSpawn " + args[0] + " [pointID]"));
+                		sender.sendMessage(Functions.formatMessage("&7&lUsage: &f/RandomSpawn " + args[0] + " [pointID] &7[Player] (optional)"));
                 	}
             	}
+            } else if(args[0].equalsIgnoreCase("force")) {
+            	if(sender.hasPermission("randomspawn.force") || sender.hasPermission("randomspawn.*") || sender.isOp()) {
+            		try {
+                		String playerName = args[1];
+    					if(playerName.equalsIgnoreCase("@a") || playerName.equalsIgnoreCase("@e") || playerName.equalsIgnoreCase("@all")  || playerName.equalsIgnoreCase("@everyone")) {
+    						for(Player p : Bukkit.getServer().getOnlinePlayers()) {
+    							RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(p,RandomSpawn.getInstance().getRandomManager().getDataManager().getRandomSpawnPoint());
+    						}
+    					} else {
+    						if(Bukkit.getServer().getPlayer(playerName).isOnline()){
+        						if(!Bukkit.getServer().getPlayer(playerName).isDead()) {
+        							RandomSpawn.getInstance().getRandomManager().getEventManager().getPlayerEvents().teleport(Bukkit.getServer().getPlayer(playerName),RandomSpawn.getInstance().getRandomManager().getDataManager().getRandomSpawnPoint());
+            						return true;
+        						} else {
+        							sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().notAvailable));
+        						}
+        					} else {
+        						sender.sendMessage(Functions.formatMessage(RandomSpawn.getInstance().getRandomManager().getDataManager().isOffline));
+        					}
+    					}
+    				} catch(Exception noSpecified) {
+    					sender.sendMessage(Functions.formatMessage("&7&lUsage: &f/RandomSpawn " + args[0] + " &7[Player] (optional: @a/@e/@all/@everyone)"));
+    				}
+            	}
             	
-            } else if(args[0].equalsIgnoreCase("edit") || args[0].equalsIgnoreCase("change") || args[0].equalsIgnoreCase("modify")) {
+            }*/ else if(args[0].equalsIgnoreCase("edit") || args[0].equalsIgnoreCase("change") || args[0].equalsIgnoreCase("modify")) {
             	if(sender.hasPermission("randomspawn.edit") || sender.hasPermission("randomspawn.*") || sender.isOp()) {
             		try {
                 		String pointID = args[1];
